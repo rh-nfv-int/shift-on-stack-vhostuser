@@ -23,4 +23,3 @@ nwid_conf_file_path: "vhostuser-bind.conf.j2"
 
 contents: []
 systemd: []
-network_resource_map: {}
