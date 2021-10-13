@@ -1,7 +1,11 @@
 Ansible Role: Create MachineConfig for Shift-on-Stack Vhostuser Interface
 =========================================================================
 
-NOTE: Changed from sriov-device-plugin approach to host-device CNI approach via MachinseSet
+NOTE: Change approach in master
+
+    sriov-device-plugin approach - [v0.1](https://github.com/rh-nfv-int/shift-on-stack-vhostuser/tree/v0.1) tag
+    host-device cni approach - master
+
 
 Commands to create virtual env in undercloud
 ```
