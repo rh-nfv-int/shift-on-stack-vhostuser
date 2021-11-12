@@ -11,6 +11,14 @@ fi
 source /etc/vhostuser-bind.conf
 
 NW_DATA="/var/config/openstack/latest/network_data.json"
+if [ ! -f ${NW_DATA} ]; then
+    echo "Network data file not found, trying to download it from nova metadata"
+    if ! curl http://169.254.169.254/openstack/latest/network_data.json > /tmp/network_data.json; then
+        echo "Failed to download network data file"
+        exit 1
+    fi
+    NW_DATA="/tmp/network_data.json"
+fi
 function parseNetwork() {
     local nwid=$1
     local pcis=()
