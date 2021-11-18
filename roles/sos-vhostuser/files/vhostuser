@@ -1,4 +1,5 @@
-#!/bin/bash
+cat /usr/local/bin/vhostuser
+#!/bin/bash -x
 
 # NOTE: jq is present in the coreos worker created, find if available in all versions
 
@@ -22,11 +23,9 @@ fi
 function parseNetwork() {
     local nwid=$1
     local pcis=()
-    echo "Network ID is $nwid"
     links=$(jq '.networks[] | select(.network_id == "'$nwid'") | .link' $NW_DATA)
     if [ ${#links} -gt 0 ]; then
         for link in $links; do
-            echo "Link Name: $link"
             mac=$(jq -r '.links[] | select(.id == '$link') | .ethernet_mac_address'  $NW_DATA)
             if [ -n $mac ]; then
                 pci=$(bindDriver $mac)
@@ -49,16 +48,14 @@ function bindDriver() {
             dev_t=${bus_str#*:}
             dev=${dev_t#[[:space:]]}
 
-            echo $dev
-
-            devlink="/sys/bus/pci/devices/$dev"
+	    devlink="/sys/bus/pci/devices/$dev"
             syspath=$(realpath "$devlink")
             if [ ! -f "$syspath/driver/unbind" ]; then
                 echo "File $syspath/driver/unbind not found"
                 return 1
             fi
             if ! echo "$dev">"$syspath/driver/unbind"; then
-                return 1
+		return 1
             fi
 
             if [ ! -f "$syspath/driver_override" ]; then
@@ -66,7 +63,7 @@ function bindDriver() {
                 return 1
             fi
             if ! echo "vfio-pci">"$syspath/driver_override"; then
-                return 1
+		return 1
             fi
 
             if [ ! -f "/sys/bus/pci/drivers/vfio-pci/bind" ]; then
@@ -74,14 +71,32 @@ function bindDriver() {
                 return 1
             fi
             if ! echo "$dev">"/sys/bus/pci/drivers/vfio-pci/bind"; then
-              return 1
+                return 1
             fi
-            return 0
+	    return 0
         fi
     done
     return 1
 }
 
+function loadKernelModules() {
+	modprobe vfio enable_unsafe_noiommu_mode=1
+        modprobe vfio-pci
+}
+
+function rmKernelModules() {
+	rmmod vfio_pci || true
+	rmmod vfio_iommu_type1 || true
+	rmmod vfio || true
+	rmmod vfio_virqfd || true
+
+	echo "vfio-pci" > "/sys/bus/pci/drivers/vfio-pci/unbind" || true
+	echo "virtio-pci" > /sys/bus/pci/devices/0000\:00\:07.0/driver_override  || true
+	echo "0000:00:07.0" > "/sys/bus/pci/drivers/virtio-pci/bind" || true
+}
+
+rmKernelModules
+loadKernelModules
 for nwid in "$@"; do
     parseNetwork $nwid
 done
