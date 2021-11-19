@@ -57,22 +57,29 @@ function bindDriver() {
                 echo "File $syspath/driver/unbind not found"
                 return 1
             fi
-            echo "$dev">"$syspath/driver/unbind"
+            if ! echo "$dev">"$syspath/driver/unbind"; then
+                return 1
+            fi
 
             if [ ! -f "$syspath/driver_override" ]; then
                 echo "File $syspath/driver_override not found"
                 return 1
             fi
-            echo "vfio-pci">"$syspath/driver_override"
+            if ! echo "vfio-pci">"$syspath/driver_override"; then
+                return 1
+            fi
 
             if [ ! -f "/sys/bus/pci/drivers/vfio-pci/bind" ]; then
                 echo "File /sys/bus/pci/drivers/vfio-pci/bind not found"
                 return 1
             fi
-            echo "$dev">"/sys/bus/pci/drivers/vfio-pci/bind"
-	    return 0
+            if ! echo "$dev">"/sys/bus/pci/drivers/vfio-pci/bind"; then
+              return 1
+            fi
+            return 0
         fi
     done
+    return 1
 }
 
 for nwid in "$@"; do
