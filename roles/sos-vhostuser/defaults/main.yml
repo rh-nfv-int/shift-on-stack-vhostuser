@@ -23,3 +23,5 @@ nwid_conf_file_path: "vhostuser-bind.conf.j2"
 
 contents: []
 systemd: []
+
+# mc_config_file: <mc config file location>
