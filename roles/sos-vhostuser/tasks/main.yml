@@ -21,5 +21,14 @@
         source: "{{ lookup('template', nwid_conf_file_path) }}"
 
 - name: create mc config
+  when:
+  - mc_config_file is not defined
   k8s:
     definition: "{{ lookup('template', mc_file_path) }}"
+
+- name: create mc config file
+  when:
+  - mc_config_file is defined
+  copy:
+    dest: "{{ mc_config_file }}"
+    content: "{{ lookup('template', mc_file_path) }}"
